@@ -14,13 +14,305 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      device_commands: {
+        Row: {
+          command: string
+          created_at: string
+          device_id: string
+          executed_at: string | null
+          id: string
+          issued_by: string | null
+          result: string | null
+          status: string
+          target: string | null
+        }
+        Insert: {
+          command: string
+          created_at?: string
+          device_id: string
+          executed_at?: string | null
+          id?: string
+          issued_by?: string | null
+          result?: string | null
+          status?: string
+          target?: string | null
+        }
+        Update: {
+          command?: string
+          created_at?: string
+          device_id?: string
+          executed_at?: string | null
+          id?: string
+          issued_by?: string | null
+          result?: string | null
+          status?: string
+          target?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_commands_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      device_events: {
+        Row: {
+          created_at: string
+          device_id: string
+          id: number
+          level: string
+          message: string
+          source: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_id: string
+          id?: number
+          level?: string
+          message: string
+          source?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_id?: string
+          id?: number
+          level?: string
+          message?: string
+          source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_events_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devices: {
+        Row: {
+          agent_token: string
+          agent_version: string | null
+          created_at: string
+          id: string
+          last_seen_at: string | null
+          name: string
+          online: boolean
+          os: string | null
+          paired: boolean
+          pairing_code: string
+          shutdown_when_finished: boolean
+          thermal_limit_c: number
+          user_id: string
+        }
+        Insert: {
+          agent_token?: string
+          agent_version?: string | null
+          created_at?: string
+          id?: string
+          last_seen_at?: string | null
+          name: string
+          online?: boolean
+          os?: string | null
+          paired?: boolean
+          pairing_code?: string
+          shutdown_when_finished?: boolean
+          thermal_limit_c?: number
+          user_id: string
+        }
+        Update: {
+          agent_token?: string
+          agent_version?: string | null
+          created_at?: string
+          id?: string
+          last_seen_at?: string | null
+          name?: string
+          online?: boolean
+          os?: string | null
+          paired?: boolean
+          pairing_code?: string
+          shutdown_when_finished?: boolean
+          thermal_limit_c?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_channels: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          kind: string
+          user_id: string
+          webhook_url: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          kind: string
+          user_id: string
+          webhook_url: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          kind?: string
+          user_id?: string
+          webhook_url?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      render_jobs: {
+        Row: {
+          current_frame: number
+          device_id: string
+          engine: string
+          eta_seconds: number | null
+          external_id: string | null
+          id: string
+          progress: number
+          project_name: string
+          samples_done: number | null
+          samples_total: number | null
+          started_at: string
+          status: string
+          total_frames: number | null
+          updated_at: string
+        }
+        Insert: {
+          current_frame?: number
+          device_id: string
+          engine: string
+          eta_seconds?: number | null
+          external_id?: string | null
+          id?: string
+          progress?: number
+          project_name: string
+          samples_done?: number | null
+          samples_total?: number | null
+          started_at?: string
+          status?: string
+          total_frames?: number | null
+          updated_at?: string
+        }
+        Update: {
+          current_frame?: number
+          device_id?: string
+          engine?: string
+          eta_seconds?: number | null
+          external_id?: string | null
+          id?: string
+          progress?: number
+          project_name?: string
+          samples_done?: number | null
+          samples_total?: number | null
+          started_at?: string
+          status?: string
+          total_frames?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "render_jobs_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      telemetry_samples: {
+        Row: {
+          cpu_load_pct: number | null
+          cpu_temp_c: number | null
+          created_at: string
+          device_id: string
+          gpu_fan_pct: number | null
+          gpu_load_pct: number | null
+          gpu_power_w: number | null
+          gpu_temp_c: number | null
+          id: number
+          power_draw_w: number | null
+          ram_total_gb: number | null
+          ram_used_gb: number | null
+          vram_total_mb: number | null
+          vram_used_mb: number | null
+        }
+        Insert: {
+          cpu_load_pct?: number | null
+          cpu_temp_c?: number | null
+          created_at?: string
+          device_id: string
+          gpu_fan_pct?: number | null
+          gpu_load_pct?: number | null
+          gpu_power_w?: number | null
+          gpu_temp_c?: number | null
+          id?: number
+          power_draw_w?: number | null
+          ram_total_gb?: number | null
+          ram_used_gb?: number | null
+          vram_total_mb?: number | null
+          vram_used_mb?: number | null
+        }
+        Update: {
+          cpu_load_pct?: number | null
+          cpu_temp_c?: number | null
+          created_at?: string
+          device_id?: string
+          gpu_fan_pct?: number | null
+          gpu_load_pct?: number | null
+          gpu_power_w?: number | null
+          gpu_temp_c?: number | null
+          id?: number
+          power_draw_w?: number | null
+          ram_total_gb?: number | null
+          ram_used_gb?: number | null
+          vram_total_mb?: number | null
+          vram_used_mb?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telemetry_samples_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      owns_device: { Args: { _device_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
