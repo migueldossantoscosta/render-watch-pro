@@ -54,7 +54,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       },
     ],
   }),
-  component: Dashboard;
+  component: Dashboard,
 });
 
 type PendingCommand = {
