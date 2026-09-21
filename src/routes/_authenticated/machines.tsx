@@ -194,7 +194,24 @@ function Machines() {
         </Dialog>
       </div>
 
-      {devicesQuery.isLoading ? (
+      {devicesQuery.isError ? (
+        <div className="panel flex flex-col items-start gap-3 border-destructive/50 p-6 sm:flex-row sm:items-center">
+          <div className="flex-1">
+            <p className="font-medium text-destructive">Failed to load machines</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Something went wrong while fetching your machines. Please try again.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => devicesQuery.refetch()}
+            className="shrink-0"
+          >
+            Try again
+          </Button>
+        </div>
+      ) : devicesQuery.isLoading ? (
         <p className="mono text-sm text-muted-foreground">Loading…</p>
       ) : devices.length === 0 ? (
         <div className="panel relative overflow-hidden p-10 text-center">
