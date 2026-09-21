@@ -19,6 +19,7 @@ Full design context: [`docs/superpowers/specs/2026-09-21-desktop-agent-telemetry
 - No Docker or Deno is installed in this environment, so the two Supabase Edge Functions cannot be run locally. They are verified by (a) a TypeScript syntax/type check with `deno check` if available, otherwise a careful read, and (b) deployment to the real dev Supabase project — **deployment is a live-infrastructure change and requires explicit user confirmation before running**, per the safety rules governing this session.
 - No new Supabase migrations: `devices` already grants `authenticated` users full CRUD via RLS (covers the Machines page); the agent's writes go through the service role inside the Edge Functions, bypassing RLS entirely, so `telemetry_samples`/`render_jobs`/`device_events` need no new INSERT policies.
 - Reuse existing shadcn/ui primitives under `src/components/ui/` for the Machines page — don't add a new UI library.
+- Visual bar for any new UI (the Machines page in this plan, and any future screen): the product must read as premium/high-end, not a flat, static admin-panel grid. The repo already ships the tokens for this in `src/styles.css` — the `panel` surface, `text-glow`, `live-dot` pulse, and a `--shadow-glow` token (exposed as the `shadow-glow` utility) — but existing screens (`dashboard.tsx`, `JobCard`, `EventFeed`) barely use them. New UI should actually spend that budget: glow accents, hover/lift transitions on interactive cards, and considered empty/success states, not just another bare `panel` div.
 - Secrets: never hardcode the Supabase service role key; Edge Functions read it from the ambient `SUPABASE_SERVICE_ROLE_KEY` env var Supabase injects automatically. `.env` is gitignored (fixed in a prior commit) — don't re-add tracked secrets.
 
 ---
@@ -84,7 +85,7 @@ Create `src/routes/_authenticated/machines.tsx`:
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Copy, MonitorSmartphone, Plus, Trash2 } from "lucide-react";
+import { Copy, MonitorSmartphone, Plus, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -176,9 +177,20 @@ function Machines() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="mono text-xs tracking-widest text-muted-foreground uppercase">Machines</h1>
+    <div className="space-y-10">
+      <div className="relative flex flex-wrap items-end justify-between gap-4 overflow-hidden rounded-2xl border border-border bg-card px-6 py-8 shadow-[var(--shadow-panel-value)]">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-primary/20 blur-3xl"
+        />
+        <div className="relative">
+          <p className="mono text-xs tracking-[0.3em] text-muted-foreground uppercase">Machines</p>
+          <h1 className="text-glow mt-2 text-3xl font-bold tracking-tight">Your render fleet</h1>
+          <p className="mt-2 max-w-md text-sm text-muted-foreground">
+            Pair a machine to start streaming live GPU telemetry and render progress straight to
+            this dashboard.
+          </p>
+        </div>
         <Dialog
           open={open}
           onOpenChange={(next) => {
@@ -187,7 +199,7 @@ function Machines() {
           }}
         >
           <DialogTrigger asChild>
-            <Button size="sm">
+            <Button size="lg" className="relative shadow-glow">
               <Plus className="size-4" />
               Add machine
             </Button>
@@ -196,13 +208,16 @@ function Machines() {
             {justCreated ? (
               <>
                 <DialogHeader>
-                  <DialogTitle>{justCreated.name} added</DialogTitle>
-                  <DialogDescription>
+                  <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Sparkles className="size-6" />
+                  </div>
+                  <DialogTitle className="text-center">{justCreated.name} added</DialogTitle>
+                  <DialogDescription className="text-center">
                     Paste this pairing code into the RenderWatch agent on that machine the first
                     time it runs.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="mono flex items-center justify-between rounded-md border border-border bg-secondary px-3 py-2 text-lg">
+                <div className="mono flex items-center justify-between rounded-xl border border-primary/40 bg-secondary px-4 py-3 text-xl tracking-[0.2em] shadow-glow">
                   {justCreated.pairing_code}
                   <Button
                     variant="ghost"
@@ -214,6 +229,7 @@ function Machines() {
                 </div>
                 <DialogFooter>
                   <Button
+                    className="w-full"
                     onClick={() => {
                       setOpen(false);
                       setJustCreated(null);
@@ -265,17 +281,26 @@ function Machines() {
       {devicesQuery.isLoading ? (
         <p className="mono text-sm text-muted-foreground">Loading…</p>
       ) : devices.length === 0 ? (
-        <div className="panel p-8 text-center">
-          <MonitorSmartphone className="mx-auto size-8 text-muted-foreground" />
-          <h2 className="mt-3 text-lg font-semibold">No machines yet</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+        <div className="panel relative overflow-hidden p-10 text-center">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 mx-auto size-40 -translate-y-1/2 rounded-full bg-primary/25 blur-3xl"
+          />
+          <div className="relative mx-auto flex size-14 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary shadow-glow">
+            <MonitorSmartphone className="size-6" />
+          </div>
+          <h2 className="relative mt-4 text-lg font-semibold">No machines yet</h2>
+          <p className="relative mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
             Add a machine to get a pairing code for the RenderWatch agent.
           </p>
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {devices.map((device) => (
-            <div key={device.id} className="panel space-y-3 p-4">
+            <div
+              key={device.id}
+              className="panel group space-y-4 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-glow"
+            >
               <div className="flex items-center gap-2">
                 <span
                   className={`size-2 rounded-full ${
@@ -289,7 +314,7 @@ function Machines() {
               </div>
               <p className="mono text-xs text-muted-foreground">{device.os ?? "unknown OS"}</p>
               {!device.paired && (
-                <div className="mono flex items-center justify-between rounded-md border border-border bg-secondary px-2 py-1.5 text-sm">
+                <div className="mono flex items-center justify-between rounded-lg border border-primary/30 bg-secondary px-3 py-2 text-sm tracking-widest">
                   {device.pairing_code}
                   <Button
                     variant="ghost"
@@ -300,7 +325,7 @@ function Machines() {
                   </Button>
                 </div>
               )}
-              <div className="flex gap-2">
+              <div className="flex gap-2 opacity-90 transition-opacity group-hover:opacity-100">
                 <Button asChild size="sm" variant="secondary" className="flex-1">
                   <Link to="/dashboard">View</Link>
                 </Button>
@@ -316,6 +341,8 @@ function Machines() {
   );
 }
 ```
+
+This leans on the design tokens already defined in `src/styles.css` (`panel`, `text-glow`, `live-dot`, and the `--shadow-glow` token exposed as the `shadow-glow` Tailwind utility) that the rest of the dashboard barely uses: a glow-accented header, a glowing pairing-code chip, and hover-lift + glow on each machine card, instead of a flat card grid.
 
 - [ ] **Step 2: Let the router regenerate its route tree**
 
