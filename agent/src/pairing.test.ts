@@ -45,7 +45,7 @@ describe("ensurePaired", () => {
   });
 
   test("prompts, pairs, and persists when no config exists", async () => {
-    let saved: AgentConfig | null = null;
+    let saved: AgentConfig | undefined;
     const config = await ensurePaired({
       configPath: "/tmp/whatever.json",
       pairUrl: "https://x/functions/v1/pair",
