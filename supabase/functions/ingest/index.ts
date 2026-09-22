@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
   await supabase.from("devices").update({ last_seen_at: new Date().toISOString(), online: true }).eq("id", deviceId);
 
   if (body.telemetry) {
-    await supabase.from("telemetry_samples").insert({ device_id: deviceId, ...body.telemetry });
+    await supabase.from("telemetry_samples").insert({ ...body.telemetry, device_id: deviceId });
   }
 
   if (body.jobs?.length) {
