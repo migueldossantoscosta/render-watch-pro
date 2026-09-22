@@ -10,6 +10,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -37,13 +47,17 @@ function Machines() {
   const [os, setOs] = useState("");
   const [creating, setCreating] = useState(false);
   const [justCreated, setJustCreated] = useState<Device | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Device | null>(null);
 
   const devicesQuery = useQuery({
     queryKey: ["devices"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("devices")
-        .select("*")
+        // Never pull agent_token into the browser; this page never needs it.
+        .select(
+          "id, user_id, name, os, agent_version, pairing_code, paired, online, shutdown_when_finished, thermal_limit_c, last_seen_at, created_at",
+        )
         .order("created_at", { ascending: true });
       if (error) throw error;
       return data as Device[];
@@ -246,23 +260,23 @@ function Machines() {
                 </Badge>
               </div>
               <p className="mono text-xs text-muted-foreground">{device.os ?? "unknown OS"}</p>
-              {!device.paired && (
-                <div className="mono flex items-center justify-between rounded-lg border border-primary/30 bg-secondary px-3 py-2 text-sm tracking-widest">
-                  {device.pairing_code}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyPairingCode(device.pairing_code)}
-                  >
-                    <Copy className="size-4" />
-                  </Button>
-                </div>
-              )}
+              {/* Always visible: the code rotates on every pairing, and the agent needs a
+                  fresh one to re-pair after its token is rejected. */}
+              <div className="mono flex items-center justify-between rounded-lg border border-primary/30 bg-secondary px-3 py-2 text-sm tracking-widest">
+                {device.pairing_code}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => copyPairingCode(device.pairing_code)}
+                >
+                  <Copy className="size-4" />
+                </Button>
+              </div>
               <div className="flex gap-2 opacity-90 transition-opacity group-hover:opacity-100">
                 <Button asChild size="sm" variant="secondary" className="flex-1">
                   <Link to="/dashboard">View</Link>
                 </Button>
-                <Button size="sm" variant="destructive" onClick={() => deleteDevice(device)}>
+                <Button size="sm" variant="destructive" onClick={() => setPendingDelete(device)}>
                   <Trash2 className="size-4" />
                 </Button>
               </div>
@@ -270,6 +284,29 @@ function Machines() {
           ))}
         </div>
       )}
+
+      <AlertDialog open={!!pendingDelete} onOpenChange={(next) => !next && setPendingDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove {pendingDelete?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes the machine along with all of its telemetry history, render
+              jobs, and events. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingDelete) void deleteDevice(pendingDelete);
+                setPendingDelete(null);
+              }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -1,5 +1,14 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
+/** Same 8-character uppercase-hex shape as the devices.pairing_code DB default. */
+function generatePairingCode(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(4));
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
+    .toUpperCase();
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
@@ -23,11 +32,16 @@ Deno.serve(async (req) => {
     });
   }
 
-  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
 
   const { data, error } = await supabase
     .from("devices")
-    .update({ paired: true })
+    // Rotate the code so the one just used cannot be replayed; the dashboard
+    // always shows the current code for re-pairing after a token rejection.
+    .update({ paired: true, pairing_code: generatePairingCode() })
     .eq("pairing_code", pairingCode)
     .select("id, agent_token")
     .maybeSingle();

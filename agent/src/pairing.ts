@@ -16,11 +16,17 @@ export async function pairDevice(
     const body = await response.text().catch(() => "");
     throw new Error(`Pairing failed (${response.status}): ${body || response.statusText}`);
   }
+  const ingestUrl = pairUrl.replace(/\/pair$/, "/ingest");
+  if (ingestUrl === pairUrl) {
+    throw new Error(
+      `Could not derive an ingest URL from pairUrl (expected it to end in "/pair"): ${pairUrl}`,
+    );
+  }
   const data = (await response.json()) as PairResponse;
   return {
     deviceId: data.device_id,
     agentToken: data.agent_token,
-    ingestUrl: pairUrl.replace(/\/pair$/, "/ingest"),
+    ingestUrl,
   };
 }
 
