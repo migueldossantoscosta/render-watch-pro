@@ -19,6 +19,7 @@ export class IngestClient {
   private readonly fetchImpl: typeof fetch;
   private consecutiveFailures = 0;
   private skipTicks = 0;
+  private flushing = false;
 
   constructor(private readonly options: IngestClientOptions) {
     this.maxQueueSize = options.maxQueueSize ?? 60;
@@ -38,19 +39,26 @@ export class IngestClient {
   }
 
   async flush(): Promise<void> {
-    if (this.skipTicks > 0) {
-      this.skipTicks -= 1;
-      return;
-    }
-    while (this.queue.length > 0) {
-      const payload = this.queue[0];
-      const ok = await this.send(payload);
-      if (!ok) {
-        this.registerFailure();
+    // A slow send can outlast the tick interval; never let two flushes interleave.
+    if (this.flushing) return;
+    this.flushing = true;
+    try {
+      if (this.skipTicks > 0) {
+        this.skipTicks -= 1;
         return;
       }
-      this.consecutiveFailures = 0;
-      this.queue.shift();
+      while (this.queue.length > 0) {
+        const payload = this.queue[0];
+        const ok = await this.send(payload);
+        if (!ok) {
+          this.registerFailure();
+          return;
+        }
+        this.consecutiveFailures = 0;
+        this.queue.shift();
+      }
+    } finally {
+      this.flushing = false;
     }
   }
 

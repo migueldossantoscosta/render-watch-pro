@@ -66,6 +66,22 @@ describe("IngestClient", () => {
     expect(client.queueLength).toBe(1);
   });
 
+  test("ignores a concurrent flush while an earlier one is still in flight", async () => {
+    let calls = 0;
+    const fetchImpl = (async () => {
+      calls += 1;
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      return new Response("{}", { status: 200 });
+    }) as unknown as typeof fetch;
+    const client = new IngestClient({ ingestUrl: "https://x/ingest", agentToken: "t", fetchImpl });
+    client.enqueue({ telemetry: { gpu_temp_c: 60 } });
+    const first = client.flush();
+    const second = client.flush();
+    await Promise.all([first, second]);
+    expect(calls).toBe(1);
+    expect(client.queueLength).toBe(0);
+  });
+
   test("backs off after a failure instead of retrying on the very next flush", async () => {
     let calls = 0;
     const fetchImpl = (async () => {
