@@ -1,1 +1,9 @@
 project_id = "aqndbjetjlijulttmywe"
+
+# Both functions authenticate themselves (pairing code / agent token), and the
+# agent never has a Supabase user JWT to send, so the gateway check must be off.
+[functions.pair]
+verify_jwt = false
+
+[functions.ingest]
+verify_jwt = false
