@@ -1,5 +1,10 @@
 import type { AgentConfig } from "./config";
-import { detectRenderProcesses, parseFrameRange, parseProjectFile } from "./processes/detect";
+import {
+  detectRenderProcesses,
+  isBackgroundBlenderRender,
+  parseFrameRange,
+  parseProjectFile,
+} from "./processes/detect";
 import type { EngineId } from "./processes/registry";
 import { readNewLines, type TailState } from "./logs/tail";
 import { parseBlenderLogLines } from "./parsers/blender";
@@ -56,6 +61,9 @@ export async function runTick(
   const seen = new Set<string>();
 
   for (const proc of processes) {
+    // An interactive Blender session is not a render; ignore it entirely.
+    if (proc.engine === "blender" && !isBackgroundBlenderRender(proc.commandLine)) continue;
+
     const projectFile = parseProjectFile(proc.commandLine) ?? `pid-${proc.pid}`;
     const key = jobKey(proc.engine, projectFile);
     seen.add(key);
@@ -72,11 +80,17 @@ export async function runTick(
         tail: { offset: 0 },
       };
       state.jobs.set(key, job);
-      events.push({ level: "info", source: proc.engine, message: `Detected ${job.projectName} rendering` });
+      events.push({
+        level: "info",
+        source: proc.engine,
+        message: `Detected ${job.projectName} rendering`,
+      });
     }
 
+    const wasFinished = job.progress.finished;
     const logPath = config.logPaths?.[proc.engine];
-    if (logPath) {
+    // Once a job is finished its log can't tell us anything new, so stop tailing.
+    if (logPath && !wasFinished) {
       const lines = await deps.readNewLines(logPath, job.tail);
       if (lines.length > 0) {
         job.progress = PARSERS[proc.engine](lines, job.progress);
@@ -100,9 +114,14 @@ export async function runTick(
       progress: pct,
     });
 
-    if (job.progress.finished) {
-      events.push({ level: "info", source: job.engine, message: `${job.projectName} finished rendering` });
-      state.jobs.delete(key);
+    // Announce completion once, on the transition. The job stays in state until the
+    // OS process actually exits, so the reaper below is the only place it is removed.
+    if (job.progress.finished && !wasFinished) {
+      events.push({
+        level: "info",
+        source: job.engine,
+        message: `${job.projectName} finished rendering`,
+      });
     }
   }
 
@@ -122,6 +141,7 @@ export async function runTick(
       cpu_load_pct: system.cpuLoadPct,
       ram_used_gb: system.ramUsedGb,
       ram_total_gb: system.ramTotalGb,
+      // No total-system power sensor available; approximate with GPU power draw.
       power_draw_w: gpu.powerW,
     },
     jobs,

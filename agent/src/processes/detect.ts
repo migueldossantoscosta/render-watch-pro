@@ -37,6 +37,17 @@ export function parseFrameRange(commandLine: string | null): { start: number; en
   return { start: Number(match[1]), end: Number(match[2]) };
 }
 
+const BACKGROUND_FLAG_RE = /(^|\s)(-b|--background)(\s|$)/;
+
+/**
+ * Blender doubles as an interactive GUI app, so only a `-b`/`--background`
+ * invocation is an actual render worth tracking.
+ */
+export function isBackgroundBlenderRender(commandLine: string | null): boolean {
+  if (!commandLine) return false;
+  return BACKGROUND_FLAG_RE.test(commandLine);
+}
+
 const PROJECT_FILE_RE = /-(?:b|project)\s+"?([^"\s][^"]*?\.(?:blend|aep))"?(?:\s|$)/i;
 
 export function parseProjectFile(commandLine: string | null): string | null {

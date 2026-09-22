@@ -1,5 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { matchEngine, parseFrameRange, parseProcessListJson, parseProjectFile } from "./detect";
+import {
+  isBackgroundBlenderRender,
+  matchEngine,
+  parseFrameRange,
+  parseProcessListJson,
+  parseProjectFile,
+} from "./detect";
 
 describe("parseProcessListJson", () => {
   test("parses a JSON array of processes", () => {
@@ -13,7 +19,9 @@ describe("parseProcessListJson", () => {
 
   test("wraps a single object result in an array", () => {
     const json = JSON.stringify({ ProcessId: 1, Name: "blender.exe", CommandLine: null });
-    expect(parseProcessListJson(json)).toEqual([{ ProcessId: 1, Name: "blender.exe", CommandLine: null }]);
+    expect(parseProcessListJson(json)).toEqual([
+      { ProcessId: 1, Name: "blender.exe", CommandLine: null },
+    ]);
   });
 
   test("returns an empty array for blank output", () => {
@@ -34,7 +42,10 @@ describe("matchEngine", () => {
 
 describe("parseFrameRange", () => {
   test("extracts explicit -s/-e frame bounds", () => {
-    expect(parseFrameRange("blender.exe -b scene.blend -s 1 -e 250 -a")).toEqual({ start: 1, end: 250 });
+    expect(parseFrameRange("blender.exe -b scene.blend -s 1 -e 250 -a")).toEqual({
+      start: 1,
+      end: 250,
+    });
   });
 
   test("returns null when no range flags are present", () => {
@@ -48,14 +59,33 @@ describe("parseFrameRange", () => {
 
 describe("parseProjectFile", () => {
   test("extracts the .blend path after -b", () => {
-    expect(parseProjectFile('blender.exe -b "C:\\scenes\\shot01.blend" -a')).toBe("C:\\scenes\\shot01.blend");
+    expect(parseProjectFile('blender.exe -b "C:\\scenes\\shot01.blend" -a')).toBe(
+      "C:\\scenes\\shot01.blend",
+    );
   });
 
   test("extracts the .aep path after -project", () => {
-    expect(parseProjectFile('aerender.exe -project "C:\\ae\\comp.aep" -comp Main')).toBe("C:\\ae\\comp.aep");
+    expect(parseProjectFile('aerender.exe -project "C:\\ae\\comp.aep" -comp Main')).toBe(
+      "C:\\ae\\comp.aep",
+    );
   });
 
   test("returns null when no project flag is present", () => {
     expect(parseProjectFile("blender.exe -a")).toBeNull();
+  });
+});
+
+describe("isBackgroundBlenderRender", () => {
+  test("accepts the short -b flag", () => {
+    expect(isBackgroundBlenderRender('blender.exe -b "C:\\scenes\\shot01.blend" -a')).toBe(true);
+  });
+
+  test("accepts the long --background flag", () => {
+    expect(isBackgroundBlenderRender("blender.exe --background scene.blend -a")).toBe(true);
+  });
+
+  test("rejects an interactive session with neither flag", () => {
+    expect(isBackgroundBlenderRender('"C:\\Program Files\\Blender\\blender.exe"')).toBe(false);
+    expect(isBackgroundBlenderRender(null)).toBe(false);
   });
 });
