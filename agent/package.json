@@ -4,13 +4,16 @@
   "type": "module",
   "scripts": {
     "start": "bun run src/index.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "typecheck": "tsc --noEmit -p .",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "systeminformation": "^5.23.5"
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "prettier": "^3.7.3",
     "typescript": "^5.8.3"
   }
 }

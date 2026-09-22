@@ -13,8 +13,20 @@ second.
 
 ## Setup
 
+`RENDERWATCH_PAIR_URL` is required — it points at the `pair` Supabase Edge
+Function for your project, in the form
+`https://<project-ref>.supabase.co/functions/v1/pair`. Without it the agent
+falls back to a placeholder URL and pairing will fail.
+
 ```sh
 bun install
+RENDERWATCH_PAIR_URL="https://<project-ref>.supabase.co/functions/v1/pair" bun run start
+```
+
+On PowerShell:
+
+```powershell
+$env:RENDERWATCH_PAIR_URL = "https://<project-ref>.supabase.co/functions/v1/pair"
 bun run start
 ```
 

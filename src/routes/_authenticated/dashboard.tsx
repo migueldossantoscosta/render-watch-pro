@@ -1,16 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import {
-  AlertTriangle,
-  Cpu,
-  Flame,
-  HardDrive,
-  Moon,
-  Power,
-  Thermometer,
-  Zap,
-} from "lucide-react";
+import { AlertTriangle, Cpu, Flame, HardDrive, Moon, Power, Thermometer, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -141,7 +132,12 @@ function Dashboard() {
       .channel(`device-${deviceId}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "telemetry_samples", filter: `device_id=eq.${deviceId}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "telemetry_samples",
+          filter: `device_id=eq.${deviceId}`,
+        },
         () => queryClient.invalidateQueries({ queryKey: ["telemetry", deviceId] }),
       )
       .on(
@@ -151,7 +147,12 @@ function Dashboard() {
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "device_events", filter: `device_id=eq.${deviceId}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "device_events",
+          filter: `device_id=eq.${deviceId}`,
+        },
         () => queryClient.invalidateQueries({ queryKey: ["events", deviceId] }),
       )
       .subscribe();
@@ -210,8 +211,8 @@ function Dashboard() {
       <div className="panel mx-auto max-w-lg p-8 text-center">
         <h1 className="text-xl font-semibold">No machine paired yet</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Add your render machine and run the small background agent on it to start streaming
-          live stats.
+          Add your render machine and run the small background agent on it to start streaming live
+          stats.
         </p>
         <Button asChild className="mt-6">
           <Link to="/machines">Add a machine</Link>

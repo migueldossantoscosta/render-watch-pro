@@ -34,7 +34,14 @@ export function parseNvidiaSmiOutput(output: string): GpuStats {
   const parts = firstLine.split(",").map((p) => p.trim());
   if (parts.length < 6) return emptyGpuStats();
   const [temp, load, fan, power, vramUsed, vramTotal] = parts.map(toNumberOrNull);
-  return { tempC: temp, loadPct: load, fanPct: fan, powerW: power, vramUsedMb: vramUsed, vramTotalMb: vramTotal };
+  return {
+    tempC: temp,
+    loadPct: load,
+    fanPct: fan,
+    powerW: power,
+    vramUsedMb: vramUsed,
+    vramTotalMb: vramTotal,
+  };
 }
 
 export async function readGpuStats(): Promise<GpuStats> {

@@ -1,4 +1,4 @@
-﻿import { open, stat } from "node:fs/promises";
+import { open, stat } from "node:fs/promises";
 
 export type TailState = { offset: number };
 

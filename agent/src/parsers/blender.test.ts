@@ -28,7 +28,10 @@ describe("parseBlenderLogLines", () => {
   });
 
   test("ignores unrelated log lines", () => {
-    const result = parseBlenderLogLines(["Blender 4.2.0", "Read blend: file.blend"], initialProgress(10));
+    const result = parseBlenderLogLines(
+      ["Blender 4.2.0", "Read blend: file.blend"],
+      initialProgress(10),
+    );
     expect(result.currentFrame).toBe(0);
   });
 });

@@ -18,7 +18,11 @@ export function parseBlenderLogLines(lines: string[], previous: ParsedProgress):
         next.samplesTotal = null;
       }
     }
-    if (/^Saved: /.test(line) && next.totalFrames != null && next.currentFrame >= next.totalFrames) {
+    if (
+      /^Saved: /.test(line) &&
+      next.totalFrames != null &&
+      next.currentFrame >= next.totalFrames
+    ) {
       next.finished = true;
     }
   }
