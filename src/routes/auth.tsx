@@ -4,7 +4,6 @@ import { Activity, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,18 +66,6 @@ function AuthPage() {
     }
   }
 
-  async function handleGoogle() {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      toast.error("Google sign-in failed");
-      return;
-    }
-    if (result.redirected) return;
-    navigate({ to: "/dashboard", replace: true });
-  }
-
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="panel w-full max-w-md p-8">
@@ -123,24 +110,12 @@ function AuthPage() {
           </Button>
         </form>
 
-        <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="h-px flex-1 bg-border" />
-          OR
-          <span className="h-px flex-1 bg-border" />
-        </div>
-
-        <Button variant="outline" className="w-full" onClick={handleGoogle}>
-          Continue with Google
-        </Button>
-
         <button
           type="button"
           onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
           className="mt-6 w-full text-center text-sm text-muted-foreground transition-colors hover:text-primary"
         >
-          {mode === "signin"
-            ? "No account yet? Create one"
-            : "Already have an account? Sign in"}
+          {mode === "signin" ? "No account yet? Create one" : "Already have an account? Sign in"}
         </button>
       </div>
     </div>
