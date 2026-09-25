@@ -1,10 +1,6 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { Activity, LogOut, MonitorSmartphone, Bell, Gauge } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Activity, MonitorSmartphone, Bell, Gauge } from "lucide-react";
 import type { ReactNode } from "react";
-
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: Gauge },
@@ -13,16 +9,6 @@ const nav = [
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-
-  async function signOut() {
-    await queryClient.cancelQueries();
-    queryClient.clear();
-    await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
-  }
-
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur">
@@ -44,10 +30,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
           </nav>
-          <Button variant="ghost" size="sm" className="ml-auto" onClick={signOut}>
-            <LogOut className="size-4" />
-            <span className="hidden sm:inline">Sign out</span>
-          </Button>
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
