@@ -7,6 +7,14 @@ export async function pairDevice(
   pairUrl: string,
   fetchImpl: typeof fetch = fetch,
 ): Promise<AgentConfig> {
+  // Check the URL shape before spending a real pairing code on a request
+  // whose response we'd have to discard anyway.
+  const ingestUrl = pairUrl.replace(/\/pair$/, "/ingest");
+  if (ingestUrl === pairUrl) {
+    throw new Error(
+      `Could not derive an ingest URL from pairUrl (expected it to end in "/pair"): ${pairUrl}`,
+    );
+  }
   const response = await fetchImpl(pairUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -15,12 +23,6 @@ export async function pairDevice(
   if (!response.ok) {
     const body = await response.text().catch(() => "");
     throw new Error(`Pairing failed (${response.status}): ${body || response.statusText}`);
-  }
-  const ingestUrl = pairUrl.replace(/\/pair$/, "/ingest");
-  if (ingestUrl === pairUrl) {
-    throw new Error(
-      `Could not derive an ingest URL from pairUrl (expected it to end in "/pair"): ${pairUrl}`,
-    );
   }
   const data = (await response.json()) as PairResponse;
   return {

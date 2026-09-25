@@ -20,11 +20,18 @@ describe("pairDevice", () => {
     });
   });
 
-  test("throws when the pair URL does not end in /pair so no ingest URL can be derived", async () => {
-    const fetchImpl = fakeFetch(200, { device_id: "device-1", agent_token: "token-1" });
+  test("throws when the pair URL does not end in /pair so no ingest URL can be derived, without spending a request", async () => {
+    let calls = 0;
+    const fetchImpl = (async () => {
+      calls += 1;
+      return new Response(JSON.stringify({ device_id: "device-1", agent_token: "token-1" }), {
+        status: 200,
+      });
+    }) as unknown as typeof fetch;
     await expect(
       pairDevice("ABCD1234", "https://example.com/functions/v1/pair/", fetchImpl),
     ).rejects.toThrow("https://example.com/functions/v1/pair/");
+    expect(calls).toBe(0);
   });
 
   test("throws with the response status and body on failure", async () => {

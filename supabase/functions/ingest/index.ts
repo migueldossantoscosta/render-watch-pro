@@ -79,13 +79,17 @@ Deno.serve(async (req) => {
   }
   const deviceId = device.id;
 
-  const writeErrors: string[] = [];
-
+  // The heartbeat is best-effort and re-sent every tick, so a transient
+  // failure here alone must not trigger a retry -- that would resend
+  // telemetry/events that already landed and duplicate them (those two
+  // writes are plain inserts, not upserts, so they aren't retry-safe).
   const { error: heartbeatError } = await supabase
     .from("devices")
     .update({ last_seen_at: new Date().toISOString(), online: true })
     .eq("id", deviceId);
-  if (heartbeatError) writeErrors.push(`devices: ${heartbeatError.message}`);
+  if (heartbeatError) console.error(`devices heartbeat failed: ${heartbeatError.message}`);
+
+  const writeErrors: string[] = [];
 
   if (body.telemetry) {
     const { error: telemetryError } = await supabase
