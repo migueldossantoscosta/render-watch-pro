@@ -29,6 +29,13 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Check required repo variables are set
+        run: |
+          if [ -z "${{ vars.VITE_SUPABASE_URL }}" ] || [ -z "${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}" ]; then
+            echo "::error::VITE_SUPABASE_URL and/or VITE_SUPABASE_PUBLISHABLE_KEY repo variables are not set (Settings > Secrets and variables > Actions > Variables). The build would otherwise succeed but produce a site that fails on every page."
+            exit 1
+          fi
+
       - name: Build
         run: bun run build
         env:
